@@ -3,13 +3,29 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CraftLand Hub API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: maps
+    description: Map operations
+  - name: creators
+    description: Creator operations
+  - name: submissions
+    description: Submission operations
+  - name: users
+    description: User operations
+  - name: comments
+    description: Comment operations
+  - name: notifications
+    description: Notification operations
+  - name: reports
+    description: Report operations
+  - name: analytics
+    description: Analytics operations
 paths:
   /healthz:
     get:
@@ -24,6 +40,843 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Maps
+  /maps:
+    get:
+      operationId: listMaps
+      tags: [maps]
+      summary: List all approved maps
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [latest, most_liked, trending]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of maps
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MapsListResponse"
+    post:
+      operationId: createMap
+      tags: [maps]
+      summary: Create a new map (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMapBody"
+      responses:
+        "201":
+          description: Created map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Map"
+
+  /maps/featured:
+    get:
+      operationId: getFeaturedMaps
+      tags: [maps]
+      summary: Get featured maps for homepage
+      responses:
+        "200":
+          description: Featured maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Map"
+
+  /maps/trending:
+    get:
+      operationId: getTrendingMaps
+      tags: [maps]
+      summary: Get trending maps
+      responses:
+        "200":
+          description: Trending maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Map"
+
+  /maps/most-liked:
+    get:
+      operationId: getMostLikedMaps
+      tags: [maps]
+      summary: Get most liked maps
+      responses:
+        "200":
+          description: Most liked maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Map"
+
+  /maps/{id}:
+    get:
+      operationId: getMap
+      tags: [maps]
+      summary: Get a single map
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Map details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Map"
+        "404":
+          description: Map not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMap
+      tags: [maps]
+      summary: Update a map (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMapBody"
+      responses:
+        "200":
+          description: Updated map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Map"
+    delete:
+      operationId: deleteMap
+      tags: [maps]
+      summary: Delete a map (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Map deleted
+
+  /maps/{id}/like:
+    post:
+      operationId: likeMap
+      tags: [maps]
+      summary: Like a map
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResponse"
+
+  /maps/{id}/bookmark:
+    post:
+      operationId: bookmarkMap
+      tags: [maps]
+      summary: Bookmark a map
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bookmark toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkResponse"
+
+  /maps/{id}/view:
+    post:
+      operationId: recordMapView
+      tags: [maps]
+      summary: Record a map view
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: View recorded
+
+  /maps/{id}/adjust-likes:
+    post:
+      operationId: adjustMapLikes
+      tags: [maps]
+      summary: Manually adjust map likes (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustLikesBody"
+      responses:
+        "200":
+          description: Likes adjusted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Map"
+
+  # Comments
+  /maps/{mapId}/comments:
+    get:
+      operationId: listComments
+      tags: [comments]
+      summary: Get comments for a map
+      parameters:
+        - name: mapId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Post a comment on a map
+      parameters:
+        - name: mapId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentBody"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /comments/{id}:
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment (admin or owner)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Comment deleted
+
+  # Creators
+  /creators:
+    get:
+      operationId: listCreators
+      tags: [creators]
+      summary: List all creators
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of creators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Creator"
+    post:
+      operationId: createCreator
+      tags: [creators]
+      summary: Create a new creator (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCreatorBody"
+      responses:
+        "201":
+          description: Created creator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Creator"
+
+  /creators/{id}:
+    get:
+      operationId: getCreator
+      tags: [creators]
+      summary: Get creator profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Creator profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Creator"
+        "404":
+          description: Creator not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateCreator
+      tags: [creators]
+      summary: Update a creator (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCreatorBody"
+      responses:
+        "200":
+          description: Updated creator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Creator"
+    delete:
+      operationId: deleteCreator
+      tags: [creators]
+      summary: Delete a creator (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Creator deleted
+
+  /creators/{id}/maps:
+    get:
+      operationId: getCreatorMaps
+      tags: [creators]
+      summary: Get all maps by a creator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Creator maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Map"
+
+  /creators/{id}/follow:
+    post:
+      operationId: followCreator
+      tags: [creators]
+      summary: Follow or unfollow a creator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Follow toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowResponse"
+
+  # Submissions
+  /submissions:
+    get:
+      operationId: listSubmissions
+      tags: [submissions]
+      summary: List submissions (admin only)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: List of submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+    post:
+      operationId: createSubmission
+      tags: [submissions]
+      summary: Submit a new map
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubmissionBody"
+      responses:
+        "201":
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /submissions/{id}/approve:
+    post:
+      operationId: approveSubmission
+      tags: [submissions]
+      summary: Approve a submission (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Submission approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /submissions/{id}/reject:
+    post:
+      operationId: rejectSubmission
+      tags: [submissions]
+      summary: Reject a submission (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectSubmissionBody"
+      responses:
+        "200":
+          description: Submission rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  # Users
+  /users/me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    patch:
+      operationId: updateMe
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserBody"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/me/liked-maps:
+    get:
+      operationId: getMyLikedMaps
+      tags: [users]
+      summary: Get current user's liked maps
+      responses:
+        "200":
+          description: Liked maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Map"
+
+  /users/me/bookmarked-maps:
+    get:
+      operationId: getMyBookmarkedMaps
+      tags: [users]
+      summary: Get current user's bookmarked maps
+      responses:
+        "200":
+          description: Bookmarked maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Map"
+
+  /users/me/submissions:
+    get:
+      operationId: getMySubmissions
+      tags: [users]
+      summary: Get current user's submissions
+      responses:
+        "200":
+          description: User submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
+  /users/me/followed-creators:
+    get:
+      operationId: getMyFollowedCreators
+      tags: [users]
+      summary: Get current user's followed creators
+      responses:
+        "200":
+          description: Followed creators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Creator"
+
+  /users/me/recently-viewed:
+    get:
+      operationId: getRecentlyViewedMaps
+      tags: [users]
+      summary: Get recently viewed maps
+      responses:
+        "200":
+          description: Recently viewed maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Map"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (admin only)
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserProfile"
+
+  # Notifications
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get current user's notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notification updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: All notifications marked as read
+
+  # Reports
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List all reports (admin only)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, resolved, dismissed]
+      responses:
+        "200":
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: createReport
+      tags: [reports]
+      summary: Report a map
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReportBody"
+      responses:
+        "201":
+          description: Report created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}/resolve:
+    post:
+      operationId: resolveReport
+      tags: [reports]
+      summary: Resolve a report (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}/dismiss:
+    post:
+      operationId: dismissReport
+      tags: [reports]
+      summary: Dismiss a report (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report dismissed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  # Analytics
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Get overall analytics summary (admin only)
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
+
+  /analytics/top-maps:
+    get:
+      operationId: getTopMaps
+      tags: [analytics]
+      summary: Get top performing maps (admin)
+      responses:
+        "200":
+          description: Top maps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MapAnalytics"
+
+  /analytics/top-creators:
+    get:
+      operationId: getTopCreators
+      tags: [analytics]
+      summary: Get top performing creators (admin)
+      responses:
+        "200":
+          description: Top creators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CreatorAnalytics"
+
+  /analytics/activity-logs:
+    get:
+      operationId: getActivityLogs
+      tags: [analytics]
+      summary: Get admin activity logs
+      responses:
+        "200":
+          description: Activity logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityLog"
+
+  # Contact
+  /contact:
+    post:
+      operationId: sendContactMessage
+      tags: [health]
+      summary: Send a contact message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageBody"
+      responses:
+        "200":
+          description: Message sent
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +887,524 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Map:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        image:
+          type: ["string", "null"]
+        mapLink:
+          type: ["string", "null"]
+        creatorId:
+          type: ["integer", "null"]
+        creatorName:
+          type: ["string", "null"]
+        creatorLogo:
+          type: ["string", "null"]
+        likes:
+          type: integer
+        views:
+          type: integer
+        region:
+          type: string
+        isFeatured:
+          type: boolean
+        isTrending:
+          type: boolean
+        createdAt:
+          type: string
+        isLiked:
+          type: boolean
+        isBookmarked:
+          type: boolean
+      required:
+        - id
+        - name
+        - code
+        - likes
+        - views
+        - region
+        - isFeatured
+        - isTrending
+        - createdAt
+        - isLiked
+        - isBookmarked
+
+    MapsListResponse:
+      type: object
+      properties:
+        maps:
+          type: array
+          items:
+            $ref: "#/components/schemas/Map"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required:
+        - maps
+        - total
+        - page
+        - limit
+
+    CreateMapBody:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        image:
+          type: ["string", "null"]
+        mapLink:
+          type: ["string", "null"]
+        creatorId:
+          type: ["integer", "null"]
+        region:
+          type: string
+        isFeatured:
+          type: boolean
+        isTrending:
+          type: boolean
+      required:
+        - name
+        - code
+        - region
+
+    UpdateMapBody:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        image:
+          type: ["string", "null"]
+        mapLink:
+          type: ["string", "null"]
+        creatorId:
+          type: ["integer", "null"]
+        region:
+          type: string
+        isFeatured:
+          type: boolean
+        isTrending:
+          type: boolean
+
+    AdjustLikesBody:
+      type: object
+      properties:
+        delta:
+          type: integer
+      required:
+        - delta
+
+    LikeResponse:
+      type: object
+      properties:
+        liked:
+          type: boolean
+        likes:
+          type: integer
+      required:
+        - liked
+        - likes
+
+    BookmarkResponse:
+      type: object
+      properties:
+        bookmarked:
+          type: boolean
+      required:
+        - bookmarked
+
+    FollowResponse:
+      type: object
+      properties:
+        following:
+          type: boolean
+      required:
+        - following
+
+    Creator:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        logo:
+          type: ["string", "null"]
+        banner:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+        totalMaps:
+          type: integer
+        totalLikes:
+          type: integer
+        isFollowed:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - totalMaps
+        - totalLikes
+        - isFollowed
+        - createdAt
+
+    CreateCreatorBody:
+      type: object
+      properties:
+        name:
+          type: string
+        logo:
+          type: ["string", "null"]
+        banner:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+      required:
+        - name
+
+    UpdateCreatorBody:
+      type: object
+      properties:
+        name:
+          type: string
+        logo:
+          type: ["string", "null"]
+        banner:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        region:
+          type: ["string", "null"]
+
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+        creatorName:
+          type: string
+        region:
+          type: string
+        mapCode:
+          type: string
+        mapLink:
+          type: ["string", "null"]
+        image:
+          type: ["string", "null"]
+        mapName:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejectionReason:
+          type: ["string", "null"]
+        submittedByUserId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - creatorName
+        - region
+        - mapCode
+        - status
+        - createdAt
+
+    CreateSubmissionBody:
+      type: object
+      properties:
+        creatorName:
+          type: string
+        region:
+          type: string
+        mapCode:
+          type: string
+        mapLink:
+          type: ["string", "null"]
+        image:
+          type: ["string", "null"]
+        mapName:
+          type: ["string", "null"]
+      required:
+        - creatorName
+        - region
+        - mapCode
+
+    RejectSubmissionBody:
+      type: object
+      properties:
+        reason:
+          type: ["string", "null"]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, moderator, admin, super_admin]
+        createdAt:
+          type: string
+      required:
+        - id
+        - role
+        - createdAt
+
+    UpdateUserBody:
+      type: object
+      properties:
+        username:
+          type: string
+        avatar:
+          type: ["string", "null"]
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        mapId:
+          type: integer
+        userId:
+          type: string
+        username:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        content:
+          type: string
+        parentId:
+          type: ["integer", "null"]
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        createdAt:
+          type: string
+      required:
+        - id
+        - mapId
+        - userId
+        - content
+        - createdAt
+        - replies
+
+    CreateCommentBody:
+      type: object
+      properties:
+        content:
+          type: string
+        parentId:
+          type: ["integer", "null"]
+      required:
+        - content
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        isRead:
+          type: boolean
+        link:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - type
+        - title
+        - message
+        - isRead
+        - createdAt
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        mapId:
+          type: integer
+        mapName:
+          type: ["string", "null"]
+        userId:
+          type: ["string", "null"]
+        reason:
+          type: string
+          enum: [spam, invalid_code, inappropriate_content, other]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, resolved, dismissed]
+        createdAt:
+          type: string
+      required:
+        - id
+        - mapId
+        - reason
+        - status
+        - createdAt
+
+    CreateReportBody:
+      type: object
+      properties:
+        mapId:
+          type: integer
+        reason:
+          type: string
+          enum: [spam, invalid_code, inappropriate_content, other]
+        description:
+          type: ["string", "null"]
+      required:
+        - mapId
+        - reason
+
+    AnalyticsSummary:
+      type: object
+      properties:
+        totalMaps:
+          type: integer
+        totalCreators:
+          type: integer
+        totalUsers:
+          type: integer
+        totalSubmissions:
+          type: integer
+        pendingSubmissions:
+          type: integer
+        totalLikes:
+          type: integer
+        totalViews:
+          type: integer
+        totalReports:
+          type: integer
+        pendingReports:
+          type: integer
+      required:
+        - totalMaps
+        - totalCreators
+        - totalUsers
+        - totalSubmissions
+        - pendingSubmissions
+        - totalLikes
+        - totalViews
+        - totalReports
+        - pendingReports
+
+    MapAnalytics:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        likes:
+          type: integer
+        views:
+          type: integer
+        region:
+          type: string
+      required:
+        - id
+        - name
+        - likes
+        - views
+        - region
+
+    CreatorAnalytics:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        totalMaps:
+          type: integer
+        totalLikes:
+          type: integer
+      required:
+        - id
+        - name
+        - totalMaps
+        - totalLikes
+
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        adminId:
+          type: string
+        adminUsername:
+          type: ["string", "null"]
+        action:
+          type: string
+        targetType:
+          type: ["string", "null"]
+        targetId:
+          type: ["integer", "null"]
+        details:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - adminId
+        - action
+        - createdAt
+
+    ContactMessageBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        message:
+          type: string
+      required:
+        - name
+        - message

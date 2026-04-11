@@ -1,5 +1,8 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { initWebPush } from "./lib/webPush";
+
+initWebPush();
 
 const rawPort = process.env["PORT"];
 
