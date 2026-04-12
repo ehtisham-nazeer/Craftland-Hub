@@ -11,6 +11,10 @@ import {
 
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
+function isReplitEnvironment(): boolean {
+  return !!(process.env.REPLIT_DEPLOYMENT || process.env.REPL_ID || process.env.REPL_SLUG);
+}
+
 export const objectStorageClient = new Storage({
   credentials: {
     audience: "replit",
@@ -34,6 +38,14 @@ export class ObjectNotFoundError extends Error {
     super("Object not found");
     this.name = "ObjectNotFoundError";
     Object.setPrototypeOf(this, ObjectNotFoundError.prototype);
+  }
+}
+
+export class ObjectStorageUnavailableError extends Error {
+  constructor() {
+    super("Object storage is only available on Replit. Image upload is not supported in this environment.");
+    this.name = "ObjectStorageUnavailableError";
+    Object.setPrototypeOf(this, ObjectStorageUnavailableError.prototype);
   }
 }
 
@@ -107,6 +119,10 @@ export class ObjectStorageService {
   }
 
   async getObjectEntityUploadURL(): Promise<string> {
+    if (!isReplitEnvironment()) {
+      throw new ObjectStorageUnavailableError();
+    }
+
     const privateObjectDir = this.getPrivateObjectDir();
     if (!privateObjectDir) {
       throw new Error(

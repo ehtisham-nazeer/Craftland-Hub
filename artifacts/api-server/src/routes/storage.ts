@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { Readable } from "stream";
 import { z } from "zod";
-import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { ObjectStorageService, ObjectNotFoundError, ObjectStorageUnavailableError } from "../lib/objectStorage";
 import { requireAuth } from "../middlewares/auth";
 
 const RequestUploadUrlBody = z.object({
@@ -66,6 +66,10 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: Request, re
       }),
     );
   } catch (error) {
+    if (error instanceof ObjectStorageUnavailableError) {
+      res.status(503).json({ error: "Image upload is not available in this deployment. You can submit your application without a logo." });
+      return;
+    }
     req.log.error({ err: error }, "Error generating upload URL");
     res.status(500).json({ error: "Failed to generate upload URL" });
   }

@@ -129,8 +129,15 @@ export default function JoinCreator() {
       setLogoUrl(servingUrl);
       toast.success("Logo uploaded successfully");
     },
-    onError: () => {
-      toast.error("Logo upload failed", { description: "Please try again." });
+    onError: (err?: Error) => {
+      const isUnavailable =
+        err?.message?.includes("not available in this deployment") ||
+        err?.message?.includes("not available in this environment");
+      toast.error("Logo upload failed", {
+        description: isUnavailable
+          ? "Image upload is not available here. You can still submit without a logo."
+          : "Please try again.",
+      });
     },
   });
 
