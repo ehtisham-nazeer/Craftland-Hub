@@ -1,5 +1,3 @@
-import { Storage, File } from "@google-cloud/storage";
-import { Readable } from "stream";
 import { randomUUID } from "crypto";
 import {
   ObjectAclPolicy,
@@ -15,23 +13,48 @@ function isReplitEnvironment(): boolean {
   return !!(process.env.REPLIT_DEPLOYMENT || process.env.REPL_ID || process.env.REPL_SLUG);
 }
 
-export const objectStorageClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: {
-        type: "json",
-        subject_token_field_name: "access_token",
+// Lazy-load @google-cloud/storage only when actually needed (on Replit).
+// This prevents a module-not-found crash on Vercel where the package is
+// marked external and may not be included in the serverless function bundle.
+let _gcsModule: { Storage: new (...args: unknown[]) => unknown; File: new (...args: unknown[]) => unknown } | null = null;
+
+function getGCSModule() {
+  if (_gcsModule === null) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _gcsModule = require("@google-cloud/storage") as typeof _gcsModule;
+  }
+  return _gcsModule!;
+}
+
+let _objectStorageClient: unknown = null;
+
+function getObjectStorageClient() {
+  if (!_objectStorageClient) {
+    const { Storage } = getGCSModule();
+    _objectStorageClient = new Storage({
+      credentials: {
+        audience: "replit",
+        subject_token_type: "access_token",
+        token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+        type: "external_account",
+        credential_source: {
+          url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+          format: {
+            type: "json",
+            subject_token_field_name: "access_token",
+          },
+        },
+        universe_domain: "googleapis.com",
       },
-    },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-});
+      projectId: "",
+    });
+  }
+  return _objectStorageClient as {
+    bucket: (name: string) => {
+      file: (name: string) => unknown;
+    };
+  };
+}
 
 export class ObjectNotFoundError extends Error {
   constructor() {
@@ -82,29 +105,35 @@ export class ObjectStorageService {
     return dir;
   }
 
-  async searchPublicObject(filePath: string): Promise<File | null> {
+  async searchPublicObject(filePath: string): Promise<unknown | null> {
+    if (!isReplitEnvironment()) {
+      return null;
+    }
     for (const searchPath of this.getPublicObjectSearchPaths()) {
       const fullPath = `${searchPath}/${filePath}`;
-
       const { bucketName, objectName } = parseObjectPath(fullPath);
-      const bucket = objectStorageClient.bucket(bucketName);
-      const file = bucket.file(objectName);
-
+      const client = getObjectStorageClient();
+      const bucket = client.bucket(bucketName);
+      const file = bucket.file(objectName) as { exists: () => Promise<[boolean]> };
       const [exists] = await file.exists();
       if (exists) {
         return file;
       }
     }
-
     return null;
   }
 
-  async downloadObject(file: File, cacheTtlSec: number = 3600): Promise<Response> {
-    const [metadata] = await file.getMetadata();
-    const aclPolicy = await getObjectAclPolicy(file);
+  async downloadObject(file: unknown, cacheTtlSec: number = 3600): Promise<Response> {
+    const typedFile = file as {
+      getMetadata: () => Promise<[{ contentType?: string; size?: number }]>;
+      createReadStream: () => import("stream").Readable;
+    };
+    const [metadata] = await typedFile.getMetadata();
+    const aclPolicy = await getObjectAclPolicy(file as Parameters<typeof getObjectAclPolicy>[0]);
     const isPublic = aclPolicy?.visibility === "public";
 
-    const nodeStream = file.createReadStream();
+    const { Readable } = await import("stream");
+    const nodeStream = typedFile.createReadStream();
     const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
     const headers: Record<string, string> = {
@@ -124,12 +153,6 @@ export class ObjectStorageService {
     }
 
     const privateObjectDir = this.getPrivateObjectDir();
-    if (!privateObjectDir) {
-      throw new Error(
-        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
-          "tool and set PRIVATE_OBJECT_DIR env var."
-      );
-    }
 
     const objectId = randomUUID();
     const fullPath = `${privateObjectDir}/uploads/${objectId}`;
@@ -144,7 +167,11 @@ export class ObjectStorageService {
     });
   }
 
-  async getObjectEntityFile(objectPath: string): Promise<File> {
+  async getObjectEntityFile(objectPath: string): Promise<unknown> {
+    if (!isReplitEnvironment()) {
+      throw new ObjectNotFoundError();
+    }
+
     if (!objectPath.startsWith("/objects/")) {
       throw new ObjectNotFoundError();
     }
@@ -161,8 +188,11 @@ export class ObjectStorageService {
     }
     const objectEntityPath = `${entityDir}${entityId}`;
     const { bucketName, objectName } = parseObjectPath(objectEntityPath);
-    const bucket = objectStorageClient.bucket(bucketName);
-    const objectFile = bucket.file(objectName);
+    const client = getObjectStorageClient();
+    const bucket = client.bucket(bucketName);
+    const objectFile = bucket.file(objectName) as {
+      exists: () => Promise<[boolean]>;
+    };
     const [exists] = await objectFile.exists();
     if (!exists) {
       throw new ObjectNotFoundError();
@@ -201,7 +231,7 @@ export class ObjectStorageService {
     }
 
     const objectFile = await this.getObjectEntityFile(normalizedPath);
-    await setObjectAclPolicy(objectFile, aclPolicy);
+    await setObjectAclPolicy(objectFile as Parameters<typeof setObjectAclPolicy>[0], aclPolicy);
     return normalizedPath;
   }
 
@@ -211,12 +241,12 @@ export class ObjectStorageService {
     requestedPermission,
   }: {
     userId?: string;
-    objectFile: File;
+    objectFile: unknown;
     requestedPermission?: ObjectPermission;
   }): Promise<boolean> {
     return canAccessObject({
       userId,
-      objectFile,
+      objectFile: objectFile as Parameters<typeof canAccessObject>[0]["objectFile"],
       requestedPermission: requestedPermission ?? ObjectPermission.READ,
     });
   }
@@ -234,13 +264,10 @@ function parseObjectPath(path: string): {
     throw new Error("Invalid path: must contain at least a bucket name");
   }
 
-  const bucketName = pathParts[1];
+  const bucketName = pathParts[1]!;
   const objectName = pathParts.slice(2).join("/");
 
-  return {
-    bucketName,
-    objectName,
-  };
+  return { bucketName, objectName };
 }
 
 async function signObjectURL({
@@ -264,9 +291,7 @@ async function signObjectURL({
     `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
       signal: AbortSignal.timeout(30_000),
     }
@@ -279,6 +304,5 @@ async function signObjectURL({
   }
 
   const body = await response.json() as { signed_url: string };
-  const signedURL = body.signed_url;
-  return signedURL;
+  return body.signed_url;
 }

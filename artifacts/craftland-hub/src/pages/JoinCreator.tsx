@@ -11,7 +11,7 @@ import {
   useGetCreatorMe,
   getMyCreatorApplicationsQueryKey,
 } from "@workspace/api-client-react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { toast } from "@/lib/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -123,21 +123,13 @@ export default function JoinCreator() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
-  const { uploadFile, isUploading } = useUpload({
-    onSuccess: (res: { objectPath: string }) => {
-      const servingUrl = `/api/storage${res.objectPath}`;
-      setLogoUrl(servingUrl);
+  const { uploadFile, isUploading } = useImageUpload({
+    onSuccess: (url: string) => {
+      setLogoUrl(url);
       toast.success("Logo uploaded successfully");
     },
-    onError: (err?: Error) => {
-      const isUnavailable =
-        err?.message?.includes("not available in this deployment") ||
-        err?.message?.includes("not available in this environment");
-      toast.error("Logo upload failed", {
-        description: isUnavailable
-          ? "Image upload is not available here. You can still submit without a logo."
-          : "Please try again.",
-      });
+    onError: () => {
+      toast.error("Logo upload failed", { description: "Please try again." });
     },
   });
 

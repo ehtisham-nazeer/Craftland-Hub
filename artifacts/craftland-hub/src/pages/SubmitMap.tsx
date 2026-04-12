@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateSubmission, useGetCreatorMe } from "@workspace/api-client-react";
 import { toast } from "@/lib/toast";
-import { useUpload } from "@workspace/object-storage-web";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,9 +31,6 @@ const formSchema = z.object({
   image: z.string().optional().or(z.literal(""))
 });
 
-const BASE_URL = import.meta.env.BASE_URL ?? "/";
-const API_BASE = BASE_URL.endsWith("/") ? BASE_URL.slice(0, -1) : BASE_URL;
-
 export default function SubmitMap() {
   const [, setLocation] = useLocation();
   const { user } = useUser();
@@ -41,18 +38,15 @@ export default function SubmitMap() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadedPath, setUploadedPath] = useState<string | null>(null);
 
-  // Fetch the user's approved creator profile (if any) to pre-fill and lock the creator name
   const { data: creatorProfile } = useGetCreatorMe({
     enabled: !!user,
     staleTime: 60_000,
   } as Parameters<typeof useGetCreatorMe>[0]);
 
-  const { uploadFile, isUploading, progress } = useUpload({
-    basePath: `${API_BASE}/api/storage`,
-    onSuccess: (result: { objectPath: string }) => {
-      const servingUrl = `${API_BASE}/api/storage${result.objectPath}`;
-      setUploadedPath(servingUrl);
-      form.setValue("image", servingUrl);
+  const { uploadFile, isUploading, progress } = useImageUpload({
+    onSuccess: (url: string) => {
+      setUploadedPath(url);
+      form.setValue("image", url);
     },
     onError: (err: Error) => {
       toast.error("Image Upload Failed", { description: err.message });
@@ -71,7 +65,6 @@ export default function SubmitMap() {
     },
   });
 
-  // When the creator profile loads, lock the creator name to their approved in-game name
   useEffect(() => {
     if (creatorProfile?.name) {
       form.setValue("creatorName", creatorProfile.name, { shouldValidate: true });

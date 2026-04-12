@@ -1,5 +1,3 @@
-import { File } from "@google-cloud/storage";
-
 const ACL_POLICY_METADATA_KEY = "custom:aclPolicy";
 
 export enum ObjectPermission {
@@ -12,8 +10,15 @@ export interface ObjectAclPolicy {
   visibility: "public" | "private";
 }
 
+type GCSFile = {
+  name: string;
+  exists: () => Promise<[boolean]>;
+  setMetadata: (opts: { metadata: Record<string, string> }) => Promise<unknown>;
+  getMetadata: () => Promise<[{ metadata?: Record<string, unknown> }]>;
+};
+
 export async function setObjectAclPolicy(
-  objectFile: File,
+  objectFile: GCSFile,
   aclPolicy: ObjectAclPolicy,
 ): Promise<void> {
   const [exists] = await objectFile.exists();
@@ -28,7 +33,7 @@ export async function setObjectAclPolicy(
 }
 
 export async function getObjectAclPolicy(
-  objectFile: File,
+  objectFile: GCSFile,
 ): Promise<ObjectAclPolicy | null> {
   const [metadata] = await objectFile.getMetadata();
   const raw = metadata?.metadata?.[ACL_POLICY_METADATA_KEY];
@@ -42,7 +47,7 @@ export async function canAccessObject({
   requestedPermission,
 }: {
   userId?: string;
-  objectFile: File;
+  objectFile: GCSFile;
   requestedPermission: ObjectPermission;
 }): Promise<boolean> {
   const aclPolicy = await getObjectAclPolicy(objectFile);
