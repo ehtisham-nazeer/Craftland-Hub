@@ -3,7 +3,7 @@ import { useParams } from "wouter";
 import { useGetCreator, useGetCreatorMaps, useFollowCreator, getGetCreatorQueryKey, getGetCreatorMapsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@clerk/react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { toast } from "@/lib/toast";
 import { MapCard } from "@/components/MapCard";
 import { Button } from "@/components/ui/button";
@@ -323,9 +323,8 @@ function EditProfileModal({
   const [isSaving, setIsSaving] = useState(false);
   const [activeUpload, setActiveUpload] = useState<"logo" | "banner" | null>(null);
 
-  const { uploadFile: uploadLogo, isUploading: isUploadingLogo } = useUpload({
-    onSuccess: (res: { objectPath: string }) => {
-      const url = `/api/storage${res.objectPath}`;
+  const { uploadFile: uploadLogo, isUploading: isUploadingLogo } = useImageUpload({
+    onSuccess: (url: string) => {
       setLogoUrl(url);
       setActiveUpload(null);
       toast.success("Logo uploaded");
@@ -336,9 +335,8 @@ function EditProfileModal({
     },
   });
 
-  const { uploadFile: uploadBanner, isUploading: isUploadingBanner } = useUpload({
-    onSuccess: (res: { objectPath: string }) => {
-      const url = `/api/storage${res.objectPath}`;
+  const { uploadFile: uploadBanner, isUploading: isUploadingBanner } = useImageUpload({
+    onSuccess: (url: string) => {
       setBannerUrl(url);
       setActiveUpload(null);
       toast.success("Banner uploaded");
