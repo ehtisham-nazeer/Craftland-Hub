@@ -333,7 +333,7 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setLocation("/sign-in")}
-                className="hidden sm:flex text-sm text-muted-foreground hover:text-foreground h-9 px-3 transition-colors duration-200"
+                className="flex text-sm text-muted-foreground hover:text-foreground h-9 px-3 transition-colors duration-200"
               >
                 Sign In
               </Button>
