@@ -111,7 +111,7 @@ export default function CreatorProfile() {
   const hasPendingEdit = (creator as { pendingEditStatus?: string | null }).pendingEditStatus === "pending";
 
   return (
-    <div className="flex flex-col w-full pb-20">
+    <div className="flex flex-col w-full pb-20 page-enter">
       {/* Banner */}
       <div className="w-full h-64 md:h-80 bg-muted relative">
         {creator.banner ? (

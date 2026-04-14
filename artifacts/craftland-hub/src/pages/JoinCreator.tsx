@@ -179,7 +179,7 @@ export default function JoinCreator() {
   }
 
   return (
-    <div className="container max-w-screen-lg mx-auto py-12 px-4 flex-1">
+    <div className="container max-w-screen-lg mx-auto py-12 px-4 flex-1 page-enter">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

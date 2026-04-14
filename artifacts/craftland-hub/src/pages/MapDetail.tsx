@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   useGetMap,
   useLikeMap,
@@ -226,12 +227,12 @@ export default function MapDetail() {
   }
 
   return (
-    <div className="flex flex-col w-full pb-20">
+    <div className="flex flex-col w-full pb-20 page-enter">
 
       {/* Cover Image — 16:9 on mobile, banner on desktop */}
       <div className="w-full bg-muted relative aspect-video md:aspect-[21/7] overflow-hidden">
         {map.image ? (
-          <img src={map.image} alt={map.name} className="w-full h-full object-cover" />
+          <img src={map.image} alt={map.name} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex items-center justify-center">
             <MapPin className="h-20 w-20 text-muted-foreground/20" />
@@ -248,14 +249,19 @@ export default function MapDetail() {
       </div>
 
       {/* Map Info Block — fully below the image, always fully visible */}
-      <div className="container max-w-screen-xl mx-auto px-4 pt-4 pb-2">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="container max-w-screen-xl mx-auto px-4 pt-4 pb-2"
+      >
         <div className="flex flex-col gap-3">
           {/* Title */}
           <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-foreground leading-tight">{map.name}</h1>
 
           {/* Creator */}
           {map.creatorId ? (
-            <Link href={`/creator/${map.creatorId}`} className="inline-flex items-center gap-2 self-start hover:bg-card/60 px-3 py-1.5 rounded-full transition-colors border border-border/40">
+            <Link href={`/creator/${map.creatorId}`} className="inline-flex items-center gap-2 self-start hover:bg-card/60 px-3 py-1.5 rounded-full transition-all duration-200 border border-border/40 active:scale-95">
               <Avatar className="h-7 w-7">
                 <AvatarImage src={map.creatorLogo ?? undefined} />
                 <AvatarFallback className="bg-primary/20 text-primary text-xs">{map.creatorName?.[0]}</AvatarFallback>
@@ -272,76 +278,104 @@ export default function MapDetail() {
           ) : null}
 
           {/* Map Code — prominent, full-width on mobile */}
-          <div className="flex items-center gap-3 bg-card border border-border/50 px-4 py-3 rounded-xl">
+          <motion.div
+            whileTap={{ scale: 0.985 }}
+            className="flex items-center gap-3 bg-card border border-primary/20 px-4 py-3 rounded-xl shadow-sm shadow-primary/5"
+          >
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground font-semibold uppercase tracking-widest mb-0.5">Map Code</p>
               <p className="font-mono text-2xl font-extrabold text-primary tracking-wider">{map.code}</p>
             </div>
-            <Button size="lg" variant="secondary" onClick={handleCopyCode} className="h-11 px-4 shrink-0 gap-2">
-              {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+            <Button size="lg" variant="secondary" onClick={handleCopyCode} className="h-11 px-4 shrink-0 gap-2 rounded-xl" style={{ WebkitTapHighlightColor: "transparent" }}>
+              <AnimatePresence mode="wait" initial={false}>
+                {copied ? (
+                  <motion.span key="check" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <Check className="h-5 w-5 text-green-500" />
+                  </motion.span>
+                ) : (
+                  <motion.span key="copy" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <Copy className="h-5 w-5" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
               <span className="text-sm font-semibold">{copied ? "Copied!" : "Copy"}</span>
             </Button>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Content Grid */}
       <div className="container max-w-screen-xl mx-auto px-4 mt-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="flex items-center gap-2 pb-4 border-b border-border/40">
-              <Button
-                variant={map.isLiked ? "default" : "outline"}
-                size="lg"
-                className={`gap-2 ${map.isLiked ? "bg-primary text-primary-foreground" : ""}`}
-                onClick={handleLike}
-                disabled={likeMutation.isPending}
-              >
-                <Heart className={`h-5 w-5 ${map.isLiked ? "fill-current" : ""}`} />
-                <span className="font-bold">{map.likes.toLocaleString()}</span>
-                <span className="hidden sm:inline">Likes</span>
-              </Button>
+            {/* Action buttons — horizontally scrollable on mobile */}
+            <div className="flex items-center gap-2 pb-4 border-b border-border/40 overflow-x-auto scroll-x-mobile">
+              <motion.div whileTap={{ scale: 0.93 }} className="shrink-0">
+                <Button
+                  variant={map.isLiked ? "default" : "outline"}
+                  size="lg"
+                  className={`gap-2 h-11 rounded-xl ${map.isLiked ? "bg-primary text-primary-foreground" : "border-white/10"}`}
+                  onClick={handleLike}
+                  disabled={likeMutation.isPending}
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  <Heart className={`h-5 w-5 transition-transform ${map.isLiked ? "fill-current scale-110" : ""}`} />
+                  <span className="font-bold tabular-nums">{map.likes.toLocaleString()}</span>
+                  <span className="hidden sm:inline">Likes</span>
+                </Button>
+              </motion.div>
 
-              <Button
-                variant={map.isBookmarked ? "default" : "outline"}
-                size="lg"
-                className={`gap-2 ${map.isBookmarked ? "bg-secondary text-secondary-foreground hover:bg-secondary/90" : ""}`}
-                onClick={handleBookmark}
-                disabled={bookmarkMutation.isPending}
-              >
-                <Bookmark className={`h-5 w-5 ${map.isBookmarked ? "fill-current" : ""}`} />
-                <span className="hidden sm:inline">{map.isBookmarked ? "Saved" : "Save"}</span>
-              </Button>
+              <motion.div whileTap={{ scale: 0.93 }} className="shrink-0">
+                <Button
+                  variant={map.isBookmarked ? "default" : "outline"}
+                  size="lg"
+                  className={`gap-2 h-11 rounded-xl ${map.isBookmarked ? "bg-secondary text-secondary-foreground hover:bg-secondary/90" : "border-white/10"}`}
+                  onClick={handleBookmark}
+                  disabled={bookmarkMutation.isPending}
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  <Bookmark className={`h-5 w-5 ${map.isBookmarked ? "fill-current" : ""}`} />
+                  <span className="hidden sm:inline">{map.isBookmarked ? "Saved" : "Save"}</span>
+                </Button>
+              </motion.div>
 
-              <Button variant="outline" size="lg" className="gap-2" onClick={() => setShowShareDialog(true)}>
-                <Share2 className="h-5 w-5" />
-                <span className="hidden sm:inline">Share</span>
-              </Button>
+              <motion.div whileTap={{ scale: 0.93 }} className="shrink-0">
+                <Button variant="outline" size="lg" className="gap-2 h-11 rounded-xl border-white/10" onClick={() => setShowShareDialog(true)} style={{ WebkitTapHighlightColor: "transparent" }}>
+                  <Share2 className="h-5 w-5" />
+                  <span className="hidden sm:inline">Share</span>
+                </Button>
+              </motion.div>
 
-              <div className="ml-auto flex items-center gap-2">
+              <div className="ml-auto flex items-center gap-2 shrink-0">
                 {isMapOwner && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 border-primary/40 hover:border-primary text-primary"
-                    onClick={() => setShowEditMapModal(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="hidden sm:inline">
-                      {(map as { pendingEditStatus?: string | null }).pendingEditStatus === "pending" ? "Edit (Pending)" : "Edit Map"}
-                    </span>
-                  </Button>
+                  <motion.div whileTap={{ scale: 0.93 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-primary/40 hover:border-primary text-primary rounded-xl h-9"
+                      onClick={() => setShowEditMapModal(true)}
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="hidden sm:inline">
+                        {(map as { pendingEditStatus?: string | null }).pendingEditStatus === "pending" ? "Edit (Pending)" : "Edit Map"}
+                      </span>
+                    </Button>
+                  </motion.div>
                 )}
                 <Show when="signed-in">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => setShowReportDialog(true)}
-                  >
-                    <Flag className="h-4 w-4 mr-2" /> Report
-                  </Button>
+                  <motion.div whileTap={{ scale: 0.93 }}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-destructive rounded-xl h-9"
+                      onClick={() => setShowReportDialog(true)}
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                    >
+                      <Flag className="h-4 w-4 mr-1.5" /> Report
+                    </Button>
+                  </motion.div>
                 </Show>
               </div>
             </div>

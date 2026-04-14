@@ -91,7 +91,7 @@ export default function Home() {
   const creators = creatorsData?.slice(0, 4) || [];
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full page-enter">
 
       {/* ── HERO ─────────────────────────────────── */}
       <section className="relative flex flex-col items-center justify-center text-center px-4 pt-24 pb-16 overflow-hidden">

@@ -106,7 +106,7 @@ export default function SubmitMap() {
   }
 
   return (
-    <div className="container max-w-screen-md mx-auto py-12 px-4 flex-1">
+    <div className="container max-w-screen-md mx-auto py-12 px-4 flex-1 page-enter">
       <Show when="signed-out">
         <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
           <div className="relative mb-6">
