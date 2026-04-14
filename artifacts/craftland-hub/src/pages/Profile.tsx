@@ -1,6 +1,6 @@
 import React from "react";
 import { Show, useUser, useClerk } from "@clerk/react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   useGetMe, 
   useGetMyLikedMaps, 
@@ -20,12 +20,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, Bookmark, History, Users, LogOut, FileText } from "lucide-react";
+import { Heart, Bookmark, History, Users, LogOut, FileText, LogIn, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Profile() {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const [, setLocation] = useLocation();
 
   const { data: me, isLoading: meLoading } = useGetMe({ query: { enabled: !!user, queryKey: getGetMeQueryKey() } });
   const { data: likedMaps, isLoading: likesLoading } = useGetMyLikedMaps({ query: { enabled: !!user, queryKey: getGetMyLikedMapsQueryKey() } });
@@ -44,8 +45,34 @@ export default function Profile() {
   return (
     <div className="flex flex-col w-full min-h-[calc(100vh-4rem)] bg-muted/10">
       <Show when="signed-out">
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-xl text-muted-foreground">Please sign in to view your profile.</p>
+        <div className="flex-1 flex flex-col items-center justify-center py-24 px-6 text-center">
+          <div className="relative mb-6">
+            <div className="h-20 w-20 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto shadow-xl">
+              <LogIn className="h-9 w-9 text-primary" />
+            </div>
+            <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl mx-auto" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-3">Sign in to your account</h2>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-8 leading-relaxed">
+            Create a free account or sign in to view your profile, liked maps, saved maps, and submitted maps.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs mx-auto">
+            <Button
+              className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-semibold btn-glow rounded-xl gap-2"
+              onClick={() => setLocation("/sign-in")}
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-11 border-white/12 hover:bg-white/6 rounded-xl gap-2 font-semibold"
+              onClick={() => setLocation("/sign-up")}
+            >
+              <UserPlus className="h-4 w-4" />
+              Sign Up
+            </Button>
+          </div>
         </div>
       </Show>
 

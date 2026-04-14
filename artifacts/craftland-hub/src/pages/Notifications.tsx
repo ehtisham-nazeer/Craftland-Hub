@@ -1,11 +1,11 @@
 import React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Show, useUser } from "@clerk/react";
 import { useListNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, getListNotificationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, Check, CheckCircle2, Map as MapIcon, Info, AlertCircle, BellRing } from "lucide-react";
+import { Bell, Check, CheckCircle2, Map as MapIcon, Info, AlertCircle, BellRing, LogIn, UserPlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +14,7 @@ export default function Notifications() {
   const { user } = useUser();
   const queryClient = useQueryClient();
   const { permission, subscribe } = usePushNotifications();
+  const [, setLocation] = useLocation();
   const [subscribing, setSubscribing] = React.useState(false);
 
   const handleEnablePush = async () => {
@@ -60,14 +61,35 @@ export default function Notifications() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-24 text-center"
+          className="flex flex-col items-center justify-center py-24 px-6 text-center"
         >
-          <div className="relative mb-5">
-            <Bell className="h-16 w-16 text-muted-foreground/30" />
-            <div className="absolute inset-0 bg-primary/8 rounded-full blur-2xl" />
+          <div className="relative mb-6">
+            <div className="h-20 w-20 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto shadow-xl">
+              <Bell className="h-9 w-9 text-primary" />
+            </div>
+            <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl mx-auto" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Authentication Required</h2>
-          <p className="text-muted-foreground text-sm">Sign in to view your notifications.</p>
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-3">Sign in to view notifications</h2>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-8 leading-relaxed">
+            Create a free account or sign in to receive map approvals, creator updates, and community alerts.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs mx-auto">
+            <Button
+              className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-semibold btn-glow rounded-xl gap-2"
+              onClick={() => setLocation("/sign-in")}
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-11 border-white/12 hover:bg-white/6 rounded-xl gap-2 font-semibold"
+              onClick={() => setLocation("/sign-up")}
+            >
+              <UserPlus className="h-4 w-4" />
+              Sign Up
+            </Button>
+          </div>
         </motion.div>
       </Show>
 

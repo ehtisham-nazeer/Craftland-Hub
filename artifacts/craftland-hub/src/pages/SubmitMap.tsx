@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UploadCloud, AlertCircle, ImageIcon, X, Loader2, Lock } from "lucide-react";
+import { UploadCloud, AlertCircle, ImageIcon, X, Loader2, Lock, LogIn, UserPlus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const REGIONS = [
@@ -108,13 +108,34 @@ export default function SubmitMap() {
   return (
     <div className="container max-w-screen-md mx-auto py-12 px-4 flex-1">
       <Show when="signed-out">
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <AlertCircle className="h-16 w-16 text-muted-foreground/50 mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Sign In to Access</h2>
-          <p className="text-muted-foreground mb-6">You need to sign in to submit maps to CraftLand Hub.</p>
-          <Button onClick={() => setLocation("/sign-in")} className="bg-primary hover:bg-primary/90 text-white font-semibold px-6">
-            Sign In to Continue
-          </Button>
+        <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+          <div className="relative mb-6">
+            <div className="h-20 w-20 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto shadow-xl">
+              <UploadCloud className="h-9 w-9 text-primary" />
+            </div>
+            <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl mx-auto" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-3">Sign in to submit a map</h2>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-8 leading-relaxed">
+            Create a free account or sign in to share your Free Fire CraftLand maps with the community.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs mx-auto">
+            <Button
+              className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-semibold btn-glow rounded-xl gap-2"
+              onClick={() => setLocation("/sign-in")}
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-11 border-white/12 hover:bg-white/6 rounded-xl gap-2 font-semibold"
+              onClick={() => setLocation("/sign-up")}
+            >
+              <UserPlus className="h-4 w-4" />
+              Sign Up
+            </Button>
+          </div>
         </div>
       </Show>
 
