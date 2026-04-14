@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { SignedIn, SignedOut, useUser, useClerk } from '@clerk/react';
+import { useUser, useClerk } from '@clerk/react';
 import { Bell, Search, Menu, User, LogOut, Shield, X, ChevronRight, Gavel } from "lucide-react";
 import { CraftLandLogoIcon } from "@/components/CraftLandLogo";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ const MODERATOR_EMAIL = "ehtishamnazeeer@gmail.com";
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
@@ -118,7 +118,7 @@ export function Navbar() {
               </nav>
 
               <div className="p-4 border-t border-white/5">
-                <SignedOut>
+                {!isSignedIn && (
                   <div className="space-y-2">
                     <Button
                       className="w-full h-11 font-semibold btn-glow bg-primary hover:bg-primary/90 text-white"
@@ -134,7 +134,7 @@ export function Navbar() {
                       Sign Up
                     </Button>
                   </div>
-                </SignedOut>
+                )}
               </div>
             </div>
           </SheetContent>
@@ -214,137 +214,141 @@ export function Navbar() {
             </Button>
           </motion.div>
 
-          <SignedIn>
-            {/* Notifications bell */}
-            <motion.div whileTap={{ scale: 0.88 }}>
-              <Link href="/notifications" style={{ WebkitTapHighlightColor: "transparent" }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-white/8 rounded-xl transition-all duration-200"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <motion.span
-                      className="absolute top-1.5 right-1.5"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                    >
-                      <span className="flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary shadow-sm shadow-primary" />
-                      </span>
-                    </motion.span>
-                  )}
-                </Button>
-              </Link>
-            </motion.div>
+          {isSignedIn && (
+            <>
+              {/* Notifications bell */}
+              <motion.div whileTap={{ scale: 0.88 }}>
+                <Link href="/notifications" style={{ WebkitTapHighlightColor: "transparent" }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-white/8 rounded-xl transition-all duration-200"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <motion.span
+                        className="absolute top-1.5 right-1.5"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                      >
+                        <span className="flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary shadow-sm shadow-primary" />
+                        </span>
+                      </motion.span>
+                    )}
+                  </Button>
+                </Link>
+              </motion.div>
 
-            {/* User avatar dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-9 w-9 rounded-full p-0 ring-2 ring-transparent hover:ring-primary/35 transition-all duration-200"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
-                    <AvatarFallback className="bg-primary/15 text-primary text-sm font-bold">
-                      {user?.firstName?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-60 bg-[#141414] border-white/8 shadow-2xl shadow-black/60"
-                align="end"
-                forceMount
-              >
-                <DropdownMenuLabel className="font-normal p-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={user?.imageUrl} />
+              {/* User avatar dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-9 w-9 rounded-full p-0 ring-2 ring-transparent hover:ring-primary/35 transition-all duration-200"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
                       <AvatarFallback className="bg-primary/15 text-primary text-sm font-bold">
                         {user?.firstName?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col min-w-0">
-                      <p className="text-sm font-semibold leading-none truncate">{user?.fullName}</p>
-                      <p className="text-xs leading-none text-muted-foreground mt-1 truncate">
-                        {user?.primaryEmailAddress?.emailAddress}
-                      </p>
-                      {isSuperAdmin && (
-                        <span className="mt-1 text-[10px] font-bold text-primary uppercase tracking-wider">Super Admin</span>
-                      )}
-                      {isModerator && !isSuperAdmin && (
-                        <span className="mt-1 text-[10px] font-bold text-amber-400 uppercase tracking-wider">Moderator</span>
-                      )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-60 bg-[#141414] border-white/8 shadow-2xl shadow-black/60"
+                  align="end"
+                  forceMount
+                >
+                  <DropdownMenuLabel className="font-normal p-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user?.imageUrl} />
+                        <AvatarFallback className="bg-primary/15 text-primary text-sm font-bold">
+                          {user?.firstName?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <p className="text-sm font-semibold leading-none truncate">{user?.fullName}</p>
+                        <p className="text-xs leading-none text-muted-foreground mt-1 truncate">
+                          {user?.primaryEmailAddress?.emailAddress}
+                        </p>
+                        {isSuperAdmin && (
+                          <span className="mt-1 text-[10px] font-bold text-primary uppercase tracking-wider">Super Admin</span>
+                        )}
+                        {isModerator && !isSuperAdmin && (
+                          <span className="mt-1 text-[10px] font-bold text-amber-400 uppercase tracking-wider">Moderator</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/5" />
-                <DropdownMenuItem
-                  onClick={() => setLocation("/profile")}
-                  className="cursor-pointer text-muted-foreground hover:text-foreground focus:text-foreground gap-2.5 py-2.5 transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  <span>My Profile</span>
-                </DropdownMenuItem>
-
-                {isSuperAdmin && (
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/5" />
                   <DropdownMenuItem
-                    onClick={() => setLocation("/admin-dashboard")}
-                    className="cursor-pointer gap-2.5 py-2.5 text-primary focus:text-primary focus:bg-primary/8"
+                    onClick={() => setLocation("/profile")}
+                    className="cursor-pointer text-muted-foreground hover:text-foreground focus:text-foreground gap-2.5 py-2.5 transition-colors"
                   >
-                    <Shield className="h-4 w-4" />
-                    <span className="font-bold">Super Admin</span>
+                    <User className="h-4 w-4" />
+                    <span>My Profile</span>
                   </DropdownMenuItem>
-                )}
 
-                {isModerator && !isSuperAdmin && (
+                  {isSuperAdmin && (
+                    <DropdownMenuItem
+                      onClick={() => setLocation("/admin-dashboard")}
+                      className="cursor-pointer gap-2.5 py-2.5 text-primary focus:text-primary focus:bg-primary/8"
+                    >
+                      <Shield className="h-4 w-4" />
+                      <span className="font-bold">Super Admin</span>
+                    </DropdownMenuItem>
+                  )}
+
+                  {isModerator && !isSuperAdmin && (
+                    <DropdownMenuItem
+                      onClick={() => setLocation("/admin-dashboard")}
+                      className="cursor-pointer gap-2.5 py-2.5 text-amber-400 focus:text-amber-400 focus:bg-amber-500/8"
+                    >
+                      <Gavel className="h-4 w-4" />
+                      <span className="font-bold">Moderation Panel</span>
+                    </DropdownMenuItem>
+                  )}
+
+                  <DropdownMenuSeparator className="bg-white/5" />
                   <DropdownMenuItem
-                    onClick={() => setLocation("/admin-dashboard")}
-                    className="cursor-pointer gap-2.5 py-2.5 text-amber-400 focus:text-amber-400 focus:bg-amber-500/8"
+                    onClick={() => signOut(() => setLocation("/"))}
+                    className="cursor-pointer text-destructive focus:text-destructive gap-2.5 py-2.5"
                   >
-                    <Gavel className="h-4 w-4" />
-                    <span className="font-bold">Moderation Panel</span>
+                    <LogOut className="h-4 w-4" />
+                    <span>Log out</span>
                   </DropdownMenuItem>
-                )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
 
-                <DropdownMenuSeparator className="bg-white/5" />
-                <DropdownMenuItem
-                  onClick={() => signOut(() => setLocation("/"))}
-                  className="cursor-pointer text-destructive focus:text-destructive gap-2.5 py-2.5"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SignedIn>
-
-          <SignedOut>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/sign-in")}
-              className="hidden sm:flex text-sm text-muted-foreground hover:text-foreground h-9 px-3 transition-colors duration-200"
-            >
-              Sign In
-            </Button>
-            <motion.div whileTap={{ scale: 0.94 }}>
+          {!isSignedIn && (
+            <>
               <Button
+                variant="ghost"
                 size="sm"
-                onClick={() => setLocation("/sign-up")}
-                className="bg-primary hover:bg-primary/90 text-white text-sm font-semibold btn-glow h-9 px-4"
-                style={{ WebkitTapHighlightColor: "transparent" }}
+                onClick={() => setLocation("/sign-in")}
+                className="hidden sm:flex text-sm text-muted-foreground hover:text-foreground h-9 px-3 transition-colors duration-200"
               >
-                Sign Up
+                Sign In
               </Button>
-            </motion.div>
-          </SignedOut>
+              <motion.div whileTap={{ scale: 0.94 }}>
+                <Button
+                  size="sm"
+                  onClick={() => setLocation("/sign-up")}
+                  className="bg-primary hover:bg-primary/90 text-white text-sm font-semibold btn-glow h-9 px-4"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  Sign Up
+                </Button>
+              </motion.div>
+            </>
+          )}
         </div>
       </div>
 

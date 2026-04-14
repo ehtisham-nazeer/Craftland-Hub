@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { Home, Compass, PlusSquare, Users, User, Bell } from "lucide-react";
-import { SignedIn, SignedOut, useUser } from '@clerk/react';
+import { useUser } from '@clerk/react';
 import { useListNotifications, getListNotificationsQueryKey } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -84,7 +84,7 @@ function BottomNavItem({
 
 export function BottomNav() {
   const [location] = useLocation();
-  const { user } = useUser();
+  const { user , isSignedIn } = useUser();
   const { data: notifications } = useListNotifications({
     query: { enabled: !!user, queryKey: getListNotificationsQueryKey() },
   });
@@ -108,7 +108,7 @@ export function BottomNav() {
         <BottomNavItem href="/submit" icon={<PlusSquare className="h-[22px] w-[22px]" />} label="Submit" active={location === "/submit"} />
         <BottomNavItem href="/creators" icon={<Users className="h-[22px] w-[22px]" />} label="Creators" active={location === "/creators"} />
 
-        <SignedIn>
+        {isSignedIn && (
           <BottomNavItem
             href="/notifications"
             icon={<Bell className="h-[22px] w-[22px]" />}
@@ -116,11 +116,11 @@ export function BottomNav() {
             active={location === "/notifications"}
             badge={unreadCount}
           />
-        </SignedIn>
+        )}
 
-        <SignedOut>
+        {!isSignedIn && (
           <BottomNavItem href="/profile" icon={<User className="h-[22px] w-[22px]" />} label="Profile" active={location === "/profile"} />
-        </SignedOut>
+        )}
       </div>
     </nav>
   );

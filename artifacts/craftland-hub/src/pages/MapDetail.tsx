@@ -16,7 +16,7 @@ import {
 import type { Comment, CreateReportBodyReason, Map as MapType } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
-import { useUser, SignedIn, SignedOut } from '@clerk/react';
+import { useUser } from '@clerk/react';
 import { useUpload } from "@workspace/object-storage-web";
 import {
   Heart, Bookmark, Share2, Copy, Flag, Check, Eye, MapPin,
@@ -58,7 +58,7 @@ export default function MapDetail() {
   const { id } = useParams<{ id: string }>();
   const mapId = parseInt(id, 10);
   const queryClient = useQueryClient();
-  const { user } = useUser();
+  const { user , isSignedIn } = useUser();
 
   const [copied, setCopied] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -364,7 +364,7 @@ export default function MapDetail() {
                     </Button>
                   </motion.div>
                 )}
-                <SignedIn>
+                {isSignedIn && (
                   <motion.div whileTap={{ scale: 0.93 }}>
                     <Button
                       variant="ghost"
@@ -376,7 +376,7 @@ export default function MapDetail() {
                       <Flag className="h-4 w-4 mr-1.5" /> Report
                     </Button>
                   </motion.div>
-                </SignedIn>
+                )}
               </div>
             </div>
 

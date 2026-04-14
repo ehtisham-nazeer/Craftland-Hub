@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SignedIn, SignedOut, useUser } from '@clerk/react';
+import { useUser } from '@clerk/react';
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import {
@@ -112,7 +112,7 @@ function CircularLogoUploader({
 
 export default function JoinCreator() {
   const queryClient = useQueryClient();
-  const { user } = useUser();
+  const { user , isSignedIn } = useUser();
   const { data: myApplications, isLoading } = useMyCreatorApplications();
   const { data: activeCreatorProfile, isLoading: profileLoading } = useGetCreatorMe({
     enabled: !!user,
@@ -200,7 +200,7 @@ export default function JoinCreator() {
           </p>
         </div>
 
-        <SignedOut>
+        {!isSignedIn && (
           <Card className="max-w-lg mx-auto bg-card border-border/50">
             <CardContent className="pt-8 pb-8 text-center">
               <AlertCircle className="h-12 w-12 text-primary mx-auto mb-4" />
@@ -211,9 +211,9 @@ export default function JoinCreator() {
               </Button>
             </CardContent>
           </Card>
-        </SignedOut>
+        )}
 
-        <SignedIn>
+        {isSignedIn && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               {hasActiveProfile ? (
@@ -386,7 +386,7 @@ export default function JoinCreator() {
               )}
             </div>
           </div>
-        </SignedIn>
+        )}
       </motion.div>
     </div>
   );
