@@ -119,7 +119,7 @@ export function BottomNav() {
         )}
 
         {!isSignedIn && (
-          <BottomNavItem href="/profile" icon={<User className="h-[22px] w-[22px]" />} label="Profile" active={location === "/profile"} />
+          <BottomNavItem href="/sign-in" icon={<User className="h-[22px] w-[22px]" />} label="Sign In" active={location === "/sign-in" || location === "/sign-up"} />
         )}
       </div>
     </nav>
