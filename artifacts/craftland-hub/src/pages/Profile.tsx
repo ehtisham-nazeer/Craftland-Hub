@@ -1,5 +1,5 @@
 import React from "react";
-import { Show, useUser, useClerk } from "@clerk/react";
+import { SignedIn, SignedOut, useUser, useClerk } from '@clerk/react';
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -45,7 +45,7 @@ export default function Profile() {
 
   return (
     <div className="flex flex-col w-full min-h-[calc(100vh-4rem)] bg-muted/10 page-enter">
-      <Show when="signed-out">
+      <SignedOut>
         <div className="flex-1 flex flex-col items-center justify-center py-24 px-6 text-center">
           <div className="relative mb-6">
             <div className="h-20 w-20 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto shadow-xl">
@@ -75,9 +75,9 @@ export default function Profile() {
             </Button>
           </div>
         </div>
-      </Show>
+      </SignedOut>
 
-      <Show when="signed-in">
+      <SignedIn>
         {/* Header Profile */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -255,7 +255,7 @@ export default function Profile() {
             </div>
           </Tabs>
         </div>
-      </Show>
+      </SignedIn>
     </div>
   );
 }

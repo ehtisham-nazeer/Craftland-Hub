@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Show, useUser, useClerk } from "@clerk/react";
+import { SignedIn, SignedOut, useUser, useClerk } from '@clerk/react';
 import { Bell, Search, Menu, User, LogOut, Shield, X, ChevronRight, Gavel } from "lucide-react";
 import { CraftLandLogoIcon } from "@/components/CraftLandLogo";
 import { Button } from "@/components/ui/button";
@@ -118,7 +118,7 @@ export function Navbar() {
               </nav>
 
               <div className="p-4 border-t border-white/5">
-                <Show when="signed-out">
+                <SignedOut>
                   <div className="space-y-2">
                     <Button
                       className="w-full h-11 font-semibold btn-glow bg-primary hover:bg-primary/90 text-white"
@@ -134,7 +134,7 @@ export function Navbar() {
                       Sign Up
                     </Button>
                   </div>
-                </Show>
+                </SignedOut>
               </div>
             </div>
           </SheetContent>
@@ -214,7 +214,7 @@ export function Navbar() {
             </Button>
           </motion.div>
 
-          <Show when="signed-in">
+          <SignedIn>
             {/* Notifications bell */}
             <motion.div whileTap={{ scale: 0.88 }}>
               <Link href="/notifications" style={{ WebkitTapHighlightColor: "transparent" }}>
@@ -323,9 +323,9 @@ export function Navbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </Show>
+          </SignedIn>
 
-          <Show when="signed-out">
+          <SignedOut>
             <Button
               variant="ghost"
               size="sm"
@@ -344,7 +344,7 @@ export function Navbar() {
                 Sign Up
               </Button>
             </motion.div>
-          </Show>
+          </SignedOut>
         </div>
       </div>
 

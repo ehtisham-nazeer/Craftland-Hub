@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Show, useUser } from "@clerk/react";
+import { SignedIn, SignedOut, useUser } from '@clerk/react';
 import { useListNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, getListNotificationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export default function Notifications() {
 
   return (
     <div className="container max-w-screen-md mx-auto py-8 px-4 flex-1 page-enter">
-      <Show when="signed-out">
+      <SignedOut>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -91,9 +91,9 @@ export default function Notifications() {
             </Button>
           </div>
         </motion.div>
-      </Show>
+      </SignedOut>
 
-      <Show when="signed-in">
+      <SignedIn>
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-5 border-b border-white/8">
           <h1 className="text-2xl md:text-3xl font-extrabold flex items-center gap-3">
@@ -220,7 +220,7 @@ export default function Notifications() {
             </motion.div>
           )}
         </div>
-      </Show>
+      </SignedIn>
     </div>
   );
 }

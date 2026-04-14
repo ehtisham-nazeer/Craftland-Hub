@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Show, useUser } from "@clerk/react";
+import { SignedIn, SignedOut, useUser } from '@clerk/react';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -107,7 +107,7 @@ export default function SubmitMap() {
 
   return (
     <div className="container max-w-screen-md mx-auto py-12 px-4 flex-1 page-enter">
-      <Show when="signed-out">
+      <SignedOut>
         <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
           <div className="relative mb-6">
             <div className="h-20 w-20 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto shadow-xl">
@@ -137,9 +137,9 @@ export default function SubmitMap() {
             </Button>
           </div>
         </div>
-      </Show>
+      </SignedOut>
 
-      <Show when="signed-in">
+      <SignedIn>
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <UploadCloud className="h-8 w-8 text-primary" />
@@ -341,7 +341,7 @@ export default function SubmitMap() {
             </Form>
           </CardContent>
         </Card>
-      </Show>
+      </SignedIn>
     </div>
   );
 }

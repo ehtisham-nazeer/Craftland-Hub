@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { Home, Compass, PlusSquare, Users, User, Bell } from "lucide-react";
-import { Show, useUser } from "@clerk/react";
+import { SignedIn, SignedOut, useUser } from '@clerk/react';
 import { useListNotifications, getListNotificationsQueryKey } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -108,7 +108,7 @@ export function BottomNav() {
         <BottomNavItem href="/submit" icon={<PlusSquare className="h-[22px] w-[22px]" />} label="Submit" active={location === "/submit"} />
         <BottomNavItem href="/creators" icon={<Users className="h-[22px] w-[22px]" />} label="Creators" active={location === "/creators"} />
 
-        <Show when="signed-in">
+        <SignedIn>
           <BottomNavItem
             href="/notifications"
             icon={<Bell className="h-[22px] w-[22px]" />}
@@ -116,11 +116,11 @@ export function BottomNav() {
             active={location === "/notifications"}
             badge={unreadCount}
           />
-        </Show>
+        </SignedIn>
 
-        <Show when="signed-out">
+        <SignedOut>
           <BottomNavItem href="/profile" icon={<User className="h-[22px] w-[22px]" />} label="Profile" active={location === "/profile"} />
-        </Show>
+        </SignedOut>
       </div>
     </nav>
   );
