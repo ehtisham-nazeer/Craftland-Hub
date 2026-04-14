@@ -140,6 +140,7 @@ export default function SubmitMap() {
       )}
 
       {isSignedIn && (
+        <>
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <UploadCloud className="h-8 w-8 text-primary" />
@@ -341,6 +342,7 @@ export default function SubmitMap() {
             </Form>
           </CardContent>
         </Card>
+        </>
       )}
     </div>
   );
